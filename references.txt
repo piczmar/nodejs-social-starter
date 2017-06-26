@@ -1,0 +1,52 @@
+Mongo Files (GridFS):
+http://java.dzone.com/articles/when-use-gridfs-mongodb
+http://mongodb.github.io/node-mongodb-native/api-articles/nodekoarticle2.html
+
+http://mcavage.me/node-restify/#bundled-plugins
+
+http://mongodb.github.io/node-mongodb-native/api-generated/gridstore.html
+
+login to mongoLab db 
+mongo ds031561.mongolab.com:31561/ootb -u admin -p admin123
+
+upload/download/list files:
+mongofiles -h ds031561.mongolab.com:31561 --db ootb -u admin -p admin123 list
+mongofiles -h ds031561.mongolab.com:31561 --db ootb -u admin -p admin123 get client.js 
+mongofiles -h ds031561.mongolab.com:31561 --db ootb -u admin -p admin123 put client.js 
+
+== upload file ==
+curl -v -s -X POST -H '' -F 'raw_data=@data.jpg;type=plain/text' -F hello=world -F profile=profile.json -F raw=raw 'http://localhost:5000/api/photos'
+
+
+http://localhost:5000/api/photos?meta=true&max=2&skip=1
+
+
+curl -X POST http://localhost:5000/api/photos/54c422095963e41b0a59a46c/likes/123123213
+curl -X GET http://localhost:5000/api/photos/54c422095963e41b0a59a46c/likes
+curl -X GET http://localhost:5000/api/photos/54c422095963e41b0a59a46c/meta
+curl -X GET http://localhost:5000/api/photos/54c422095963e41b0a59a46c/dislikes
+curl -X GET  http://localhost:5000/api/users/123123213/photos?sort={"uploadDate":-1}&max=1&skip=1
+curl -X DELETE http://localhost:5000/api/photos/54c422095963e41b0a59a46c/likes/123123213
+curl -X POST http://localhost:5000/api/photos/54c422095963e41b0a59a46c/dislikes/123123213
+curl -X DELETE http://localhost:5000/api/photos/54c422095963e41b0a59a46c/dislikes/123123213
+curl -X DELETE http://localhost:5000/api/photos/54c422095963e41b0a59a46c
+
+curl -H 'Content-Type: application/json' -d '{"userId" : "BBB", "PhotoId": "PPPP", "comment": "Some commsdsddddsdent text"}' -X POST  http://localhost:5000/api/comments
+
+https://devcenter.heroku.com/articles/getting-started-with-nodejs#deploy-the-app
+
+npm install
+foreman node web
+heroku logs
+heroku ps
+
+$ git add .
+Now commit the changes to the repository:
+
+$ git commit -m "Demo"
+Now deploy, just as you did previously:
+
+$ git push heroku master
+Finally, check that everything is working:
+
+$ heroku open
