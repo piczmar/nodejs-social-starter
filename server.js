@@ -35,11 +35,12 @@ server.get('/api', function(req, res){
   res.send({routes: server.router.mounts });
 });
 
-var url = 'mongodb://admin:admin123@ds031561.mongolab.com:31561/ootb';
-MongoClient.connect(url, function(err, db) {	
+var url = 'mongodb://demo:demo@localhost:27017/nodejs-social';
+MongoClient.connect(url, function(err, client) {
 	"use strict";
 	assert.equal(null, err);
 
+	const db = client.db('nodejs-social');
 	photos(server, db);
 	users(server, db);
 	comments(server, db);

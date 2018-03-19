@@ -1,11 +1,7 @@
 var fs = require('fs'),
     ObjectID = require('mongodb').ObjectID,
-    Binary = require('mongodb').Binary,
     GridStore = require('mongodb').GridStore,
-    Grid = require('mongodb').Grid,
-    Code = require('mongodb').Code,
-    BSON = require('mongodb').pure().BSON,
-    assert = require('assert');
+    GridFSBucket = require('mongodb').GridFSBucket;
 
 function PhotosDAO(db) {
     "use strict";
@@ -26,27 +22,28 @@ function PhotosDAO(db) {
 
         var fileId = new ObjectID();
         var fileName = "f"+fileId;
-        var gridStore = new GridStore(db, fileId, fileName, "w", {metadata : metaData});
 
-        gridStore.open(function(err, gridStore) {
-            if (err) return callback(err, null);
+        var bucket = new GridFSBucket(db);
 
-            gridStore.writeFile(pathOnDisk, function(err, doc) {
-                // clean local disk
-                fs.unlink(pathOnDisk, function(error){
-                    if(error) 
-                        console.log("Cannot remove file: " + pathOnDisk);
-                    console.log ("Cleanup file (OK) " + pathOnDisk);
+        fs.createReadStream(pathOnDisk).
+            pipe(bucket.openUploadStreamWithId(fileId, fileName, {metadata : metaData})).
+            on('error', function(error) {
+                 return callback(error, null);
+            }).
+            on('finish', function() {
+                    // clean local disk
+                    fs.unlink(pathOnDisk, function(error){
+                        if(error)
+                            console.log("Cannot remove file: " + pathOnDisk);
+                        console.log ("Cleanup file (OK) " + pathOnDisk);
 
-                    if (err) 
-                        return callback(err, null);
+                        if (error)
+                            return callback(error, null);
 
-                    callback(err,fileId);
+                        callback(error,fileId);
 
-                });
-
-            })
-        });
+                    });
+            });
     }
 
     this.get = function(id, callback) {
@@ -138,10 +135,9 @@ function PhotosDAO(db) {
         var fileId = new ObjectID(id);
 
         /* userId will be added if not exists already */
-        photos.findAndModify(
+        photos.findOneAndUpdate(
             {_id: fileId}, // query
-            [['_id','asc']],  // sort order
-            { $addToSet: { likes: userId} , $pull: { dislikes: userId} , $set: { updatedAt : new Date()}}, 
+            { $addToSet: { likes: userId} , $pull: { dislikes: userId} , $set: { updatedAt : new Date()}},
             {}, // options
             function(err, file) {
                 if (err) return callback(err, null);

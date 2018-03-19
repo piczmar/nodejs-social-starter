@@ -33,8 +33,6 @@ function PhotosController (db) {
 			if (err)
 				return next(err);
 		
-			var imageBuffer = new Buffer(fileData.length);
-
         	res.setHeader("Content-Type", "image/png");
         	res.send(fileData);
         	console.log("Download complete for "+ req.params.id +" , file size " + fileData.length + " bytes");

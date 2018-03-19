@@ -1,0 +1,17 @@
+version: "3"
+services:
+
+  nodejs-social-mongo:
+    image: mongo:3.4
+    container_name: nodejs-social-mongo
+    ports:
+      - "27017:27017"
+
+  nodejs-social-mongoClientTemp:
+   image: mongo:3.4
+   container_name: nodejs-social-mongoClientTemp
+   links:
+    - nodejs-social-mongo:mongo
+   command: mongo --host mongo --eval  "db.getSiblingDB('nodejs-social').createUser({user:'demo', pwd:'demo', roles:[]});"
+   depends_on:
+    - nodejs-social-mongo
