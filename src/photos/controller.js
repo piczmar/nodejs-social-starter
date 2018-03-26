@@ -1,18 +1,22 @@
-var PhotosDAO = require('./dao').PhotosDAO;
-var CommentsDAO = require('../comments/dao').CommentsDAO;
-/* The ContentHandler must be constructed with a connected db */
-function PhotosController (db) {
-	"use strict";
+import {PhotosDAO} from "./dao";
+import {CommentsDAO} from '../comments/dao';
 
-	var dao = new PhotosDAO(db);
-	var commentsDAO = new CommentsDAO(db);
+"use strict";
 
-	this.upload = function(req, res, next) {
+export class PhotosController {
+
+    constructor(db) {
+        this.dao = new PhotosDAO(db);
+        this.commentsDAO = new CommentsDAO(db);
+    }
+
+
+    upload(req, res, next) {
 		"use strict";
 
 		var pathOnDisk = req.files.raw_data.path;
 		var metadata = req.params;
-		dao.upload(pathOnDisk, metadata, function(err, photoId) {
+        this.dao.upload(pathOnDisk, metadata, function (err, photoId) {
 			"use strict";
 
 			if (err)
@@ -25,9 +29,9 @@ function PhotosController (db) {
 
 	}
 
-	this.get = function(req, res, next) {
+    get(req, res, next) {
 		"use strict";
-		dao.get(req.params.id, function(err, fileData) {
+        this.dao.get(req.params.id, function (err, fileData) {
 			"use strict";
 
 			if (err)
@@ -40,10 +44,10 @@ function PhotosController (db) {
        	});
 	}
 
-	this.getMeta = function(req, res, next) {
+    getMeta(req, res, next) {
 		"use strict";
 
-		dao.getMetadata(req.params.id, function(err, meta) {
+        this.dao.getMetadata(req.params.id, function (err, meta) {
 	      	"use strict";
 
 	      	if (err)
@@ -55,10 +59,11 @@ function PhotosController (db) {
 	    });
        
 	}
-	this.updateMeta = function(req, res, next) {
+
+    updateMeta(req, res, next) {
 		"use strict";
 
-		dao.updateMetadata(req.params.id, req.params, function(err, result) {
+        this.dao.updateMetadata(req.params.id, req.params, function (err, result) {
 	      	"use strict";
 
 	      	if (err)
@@ -70,10 +75,11 @@ function PhotosController (db) {
 	    });
        
 	}
-	this.remove = function(req, res, next) {
+
+    remove(req, res, next) {
 		"use strict";
 
-		dao.remove(req.params.id, function(err, result) {
+        this.dao.remove(req.params.id, function (err, result) {
 	      	"use strict";
 
 	      	if (err)
@@ -88,7 +94,7 @@ function PhotosController (db) {
        
 	}
 
-	this.getAllMeta = function(req, res, next) {
+    getAllMeta(req, res, next) {
 		"use strict";
 		console.log("GET ALL META");
 		var max = parseInt(req.query.max);
@@ -100,7 +106,7 @@ function PhotosController (db) {
 
       	var criteria = req.query;
 
-      	dao.getAllMetadata(criteria, skip, limit, null,function(err, items) {
+        this.dao.getAllMetadata(criteria, skip, limit, null, function (err, items) {
       		"use strict";
 
       		if (err)
@@ -112,13 +118,14 @@ function PhotosController (db) {
       	});
       
   	}
-  	this.addLike = function(req, res, next) {
+
+    addLike(req, res, next) {
 		"use strict";
 		var userId = req.params.userId;
 		var photoId = req.params.id;
 
 
-		dao.addLikes(photoId, userId, function(err, meta){ 
+        this.dao.addLikes(photoId, userId, function (err, meta) {
 	      	"use strict";
 
 	      	if (err)
@@ -129,13 +136,14 @@ function PhotosController (db) {
 	      	return next();
 	    });
 	}
-	this.deleteLike = function(req, res, next) {
+
+    deleteLike(req, res, next) {
 		"use strict";
 		var userId = req.params.userId;
 		var photoId = req.params.id;
 
 
-		dao.deleteLikes(photoId, userId, function(err, meta){ 
+        this.dao.deleteLikes(photoId, userId, function (err, meta) {
 	      	"use strict";
 
 	      	if (err)
@@ -146,13 +154,14 @@ function PhotosController (db) {
 	      	return next();
 	    });
 	}
-	this.addDislike = function(req, res, next) {
+
+    addDislike(req, res, next) {
 		"use strict";
 		var userId = req.params.userId;
 		var photoId = req.params.id;
 
 
-		dao.addDislikes(photoId, userId, function(err, meta){ 
+        this.dao.addDislikes(photoId, userId, function (err, meta) {
 	      	"use strict";
 
 	      	if (err)
@@ -163,13 +172,14 @@ function PhotosController (db) {
 	      	return next();
 	    });
 	}
-	this.deleteDislike = function(req, res, next) {
+
+    deleteDislike(req, res, next) {
 		"use strict";
 		var userId = req.params.userId;
 		var photoId = req.params.id;
 
 
-		dao.deleteDislikes(photoId, userId, function(err, meta){ 
+        this.dao.deleteDislikes(photoId, userId, function (err, meta) {
 	      	"use strict";
 
 	      	if (err)
@@ -180,25 +190,11 @@ function PhotosController (db) {
 	      	return next();
 	    });
 	}
-  	this.getLikesCount = function(req, res, next) {
+
+    getLikesCount(req, res, next) {
 		"use strict";
 		var id = req.params.id
-		dao.getLikesCount(id, function(err, count) {
-	      	"use strict";
-
-	      	if (err)
-	      		return next(err);
-
-	      	res.setHeader("Content-Type", "application/json");
-	      	res.send({ cnt: count });
-	      	return next();
-	    });
-       
-	}
-  	this.getDislikesCount = function(req, res, next) {
-		"use strict";
-		var id = req.params.id
-		dao.getDislikesCount(id, function(err, count) {
+        this.dao.getLikesCount(id, function (err, count) {
 	      	"use strict";
 
 	      	if (err)
@@ -211,7 +207,23 @@ function PhotosController (db) {
        
 	}
 
-	this.getComments = function(req, res, next) {
+    getDislikesCount(req, res, next) {
+		"use strict";
+		var id = req.params.id
+        this.dao.getDislikesCount(id, function (err, count) {
+	      	"use strict";
+
+	      	if (err)
+	      		return next(err);
+
+	      	res.setHeader("Content-Type", "application/json");
+	      	res.send({ cnt: count });
+	      	return next();
+	    });
+       
+	}
+
+    getComments(req, res, next) {
 		"use strict";
 		var max = parseInt(req.query.max);
 		var limit = max ? max : 10;
@@ -226,7 +238,7 @@ function PhotosController (db) {
       	criteria.photoId = req.params.photoId
 
 
-      	commentsDAO.getAll(criteria, skip, limit, sortSpec,function(err, items) {
+        this.commentsDAO.getAll(criteria, skip, limit, sortSpec, function (err, items) {
       		"use strict";
 
       		if (err)

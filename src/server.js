@@ -1,11 +1,9 @@
-var restify = require('restify'),
-	util = require('util'), 
-	MongoClient = require('mongodb').MongoClient,
-	assert = require('assert'),
-
-	photos  = require('./photos'),
-	users  = require('./users'),
-	comments  = require('./comments');
+import restify from 'restify';
+import MongoClient from 'mongodb';
+import assert from 'assert';
+import photos from './photos';
+import users from './users';
+import comments from './comments';
 
 // read this for more info: http://micheljansen.org/blog/entry/1698
 if (process.env.NODE_ENV === 'production') {
@@ -21,9 +19,7 @@ server.use(restify.acceptParser(server.acceptable));
 server.use(restify.queryParser());
 server.use(restify.bodyParser({ mapParams: true }));
 
-
-
-server.get("/", function (req, res, next) {
+server.get("/",  (req, res, next) => {
 	res.writeHead(200, {
 		'Content-Type': 'application/json; charset=utf-8'
 	});
@@ -31,7 +27,7 @@ server.get("/", function (req, res, next) {
 	return next();
 
 });
-server.get('/api', function(req, res){
+server.get('/api', (req, res) => {
   res.send({routes: server.router.mounts });
 });
 
@@ -52,7 +48,5 @@ MongoClient.connect(url, function(err, client) {
 	});
 
 });
-
-
 
 module.exports = server;

@@ -1,4 +1,4 @@
-var PhotosController = require('./controller');
+import PhotosController from './controller';
 
 module.exports = exports = function(server, db) {
 

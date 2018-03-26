@@ -1,36 +1,32 @@
-var fs = require('fs'),
-    ObjectID = require('mongodb').ObjectID,
-    GridStore = require('mongodb').GridStore,
-    GridFSBucket = require('mongodb').GridFSBucket;
+import fs from 'fs';
+import { ObjectID, GridStore, GridFSBucket} from 'mongodb';
 
-function PhotosDAO(db) {
-    "use strict";
+"use strict";
 
-    /* If this constructor is called without the "new" operator, "this" points
-    * to the global object. Log a warning and call it correctly. */
-    if (false === (this instanceof PhotosDAO)) {
-        console.warn('Warning: PhotosDAO constructor called without "new" operator');
-        return new PhotosDAO(db);
+/**
+ * PhotosDAO class.
+ * 
+ * @constructor
+ * @param {String} db - database
+ */
+export class PhotosDAO{
+
+    constructor(db){
+        this.db = db;
+        this.photos = db.collection("fs.files");
     }
 
-    var photos = db.collection("fs.files");
-
-    this.upload = function (pathOnDisk, metaData, callback) {
-        "use strict";
-
+    upload (pathOnDisk, metaData, callback) {
         console.log("inserting photo from file path" + pathOnDisk );
 
-        var fileId = new ObjectID();
-        var fileName = "f"+fileId;
-
-        var bucket = new GridFSBucket(db);
+        const fileId = new ObjectID();
+        const fileName = "f"+fileId;
+        const bucket = new GridFSBucket(this.db);
 
         fs.createReadStream(pathOnDisk).
             pipe(bucket.openUploadStreamWithId(fileId, fileName, {metadata : metaData})).
-            on('error', function(error) {
-                 return callback(error, null);
-            }).
-            on('finish', function() {
+            on('error', (error) => callback(error, null)).
+            on('finish', () => {
                     // clean local disk
                     fs.unlink(pathOnDisk, function(error){
                         if(error)
@@ -46,19 +42,17 @@ function PhotosDAO(db) {
             });
     }
 
-    this.get = function(id, callback) {
-        var fileId = new ObjectID(id);
+    get(id, callback) {
+        const fileId = new ObjectID(id);
 
-        GridStore.read(db, fileId, function(err, fileData) {
-            callback(err, fileData);
-        });
+        GridStore.read(this.db, fileId, (err, fileData) => callback(err, fileData));
     }
 
-    this.remove = function(id, callback) {
-        var fileId = new ObjectID(id);
-        var gridStore = new GridStore(db, fileId, "r");
+    remove(id, callback){
+        const fileId = new ObjectID(id);
+        const gridStore = new GridStore(this.db, fileId, "r");
 
-        gridStore.open(function(err, gridStore) {
+        gridStore.open((err, gridStore) => {
             if (err) return callback(err, null);
             // Unlink the file
             gridStore.unlink(function(err, result) {
@@ -69,7 +63,7 @@ function PhotosDAO(db) {
         });
     }
 
-    this.getAllMetadata = function(criteria, skip, limit, sortSpec, callback) {
+    getAllMetadata(criteria, skip, limit, sortSpec, callback){
         "use strict";
         var projections = {
             chunkSize : false,
@@ -84,7 +78,7 @@ function PhotosDAO(db) {
         console.log("limit: " + limit);
         console.log("sort: " + JSON.stringify(sort));
         
-        photos.find(criteria, projections).sort(sort).skip(skip).limit(limit).toArray(function(err, files) {
+        this.photos.find(criteria, projections).sort(sort).skip(skip).limit(limit).toArray(function(err, files) {
             "use strict";
 
             if (err) return callback(err, null);
@@ -95,7 +89,7 @@ function PhotosDAO(db) {
 
     }
 
-    this.getMetadata = function(id, callback) {
+    getMetadata(id, callback) {
         "use strict";
         var projections = {
             chunkSize : false,
@@ -104,7 +98,7 @@ function PhotosDAO(db) {
             aliases : false
         };
         var fileId = new ObjectID(id);
-        photos.findOne({_id : fileId}, projections , function(err, file) {
+        this.photos.findOne({_id : fileId}, projections , function(err, file) {
             "use strict";
 
             if (err) return callback(err, null);
@@ -115,10 +109,10 @@ function PhotosDAO(db) {
 
     }
 
-    this.updateMetadata = function(id, meta, callback) {
+    updateMetadata(id, meta, callback) {
         "use strict";
         var fileId = new ObjectID(id);
-        photos.update({_id : fileId}, meta , function(err, numberOfUpdatedDocs) {
+        this.photos.update({_id : fileId}, meta , function(err, numberOfUpdatedDocs) {
             "use strict";
 
             if (err) return callback(err, null);
@@ -129,13 +123,13 @@ function PhotosDAO(db) {
 
     }
 
-    this.addLikes = function(id, userId, callback) {
+    addLikes(id, userId, callback){
         "use strict";
 
         var fileId = new ObjectID(id);
 
         /* userId will be added if not exists already */
-        photos.findOneAndUpdate(
+        this.photos.findOneAndUpdate(
             {_id: fileId}, // query
             { $addToSet: { likes: userId} , $pull: { dislikes: userId} , $set: { updatedAt : new Date()}},
             {}, // options
@@ -146,13 +140,14 @@ function PhotosDAO(db) {
                 callback(err, file);
             });
     }
-    this.addDislikes = function(id, userId, callback) {
+    
+    addDislikes(id, userId, callback){
         "use strict";
 
         var fileId = new ObjectID(id);
 
         /* userId will be added if not exists already */
-        photos.findAndModify(
+        this.photos.findAndModify(
             {_id: fileId}, // query
             [['_id','asc']],  // sort order
             { $addToSet: { dislikes: userId} , $pull: { likes: userId}, $set: { updatedAt : new Date()} }, 
@@ -165,13 +160,13 @@ function PhotosDAO(db) {
             });
     }
 
-    this.deleteLikes = function(id, userId, callback) {
+    deleteLikes(id, userId, callback){
         "use strict";
 
         var fileId = new ObjectID(id);
 
         /* userId will be added if not exists already */
-        photos.findAndModify(
+        this.photos.findAndModify(
             {_id: fileId}, // query
             [['_id','asc']],  // sort order
             { $pull: { likes: userId} , $set: { updatedAt : new Date()}}, 
@@ -183,13 +178,13 @@ function PhotosDAO(db) {
                 callback(err, file);
             });
     }
-    this.deleteDislikes = function(id, userId, callback) {
+    deleteDislikes(id, userId, callback){
         "use strict";
 
         var fileId = new ObjectID(id);
 
         /* userId will be added if not exists already */
-        photos.findAndModify(
+        this.photos.findAndModify(
             {_id: fileId}, // query
             [['_id','asc']],  // sort order
             { $pull: { dislikes: userId} , $set: { updatedAt : new Date()}}, 
@@ -201,13 +196,14 @@ function PhotosDAO(db) {
                 callback(err, file);
             });
     }
-    this.getLikesCount = function(id, callback) {
+    
+    getLikesCount(id, callback){
         "use strict";
         var projections = {
             likes : true
         };
         var fileId = new ObjectID(id);
-        photos.findOne({_id : fileId}, projections , function(err, file) {
+        this.photos.findOne({_id : fileId}, projections , function(err, file) {
             "use strict";
 
             if (err) return callback(err, null);
@@ -218,13 +214,13 @@ function PhotosDAO(db) {
         });
     }
 
-    this.getDislikesCount = function(id, callback) {
+    getDislikesCount(id, callback){
         "use strict";
         var projections = {
             dislikes : true
         };
         var fileId = new ObjectID(id);
-        photos.findOne({_id : fileId}, projections , function(err, file) {
+        this.photos.findOne({_id : fileId}, projections , function(err, file) {
             "use strict";
 
             if (err) return callback(err, null);
@@ -235,5 +231,3 @@ function PhotosDAO(db) {
         });
     }
 }
-
-module.exports.PhotosDAO = PhotosDAO;
